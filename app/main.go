@@ -65,6 +65,52 @@ func catFileCommand() *cobra.Command {
 	return catFileCmd
 }
 
+func hashObjectCommand() *cobra.Command {
+	var objectType string
+	var write bool
+	var filePath string
+
+	hashObjectCmd := &cobra.Command{
+		Use:   "hash-object",
+		Short: "Compute object ID and optionally creates a blob from a file",
+		RunE: func(command *cobra.Command, args []string) error {
+			var repo *cmd.GitRepository
+			var err error
+			if write {
+				repo, err = cmd.LocateGitRepository(".", true)
+				if err != nil {
+					return fmt.Errorf("unable to locate repository: %w", err)
+				}
+			}
+
+			om := cmd.NewObjectManager(repo)
+			obType, err := cmd.TypeFromString(objectType)
+
+			if err != nil {
+				return fmt.Errorf("invalid object type: %w", err)
+			}
+
+			hash, err := om.HashObject(filePath, obType, write)
+			if err != nil {
+				return fmt.Errorf("failed to hash object: %w", err)
+			}
+
+			fmt.Println(hash)
+			return nil
+		},
+	}
+
+	hashObjectCmd.Flags().StringVarP(&objectType, "type", "t", "blob", "Specify the type (blob, commit, tag, tree)")
+
+	hashObjectCmd.Flags().BoolVarP(&write, "write", "w", false, "Actually write the object into the database")
+
+	hashObjectCmd.Flags().StringVarP(&filePath, "path", "p", "", "Read object from <file>")
+
+	_ = hashObjectCmd.MarkFlagRequired("path")
+
+	return hashObjectCmd
+}
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "justdoit",
@@ -73,7 +119,8 @@ func main() {
 
 	initCmd := initCommand()
 	catFileCmd := catFileCommand()
-	rootCmd.AddCommand(initCmd, catFileCmd)
+	hashObjCmd := hashObjectCommand()
+	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd)
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}

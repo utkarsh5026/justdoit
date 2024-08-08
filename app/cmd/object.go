@@ -14,10 +14,10 @@ import (
 type GitObjectType uint
 
 const (
-	BlobType GitObjectType = iota
-	CommitType
-	TreeType
-	TagType
+	BlobType   GitObjectType = iota // Represents a blob object.
+	CommitType                      // Represents a commit object.
+	TreeType                        // Represents a tree object.
+	TagType                         // Represents a tag object.
 )
 
 // String returns the string representation of the GitObjectType.
@@ -36,9 +36,9 @@ func (got GitObjectType) String() string {
 	}
 }
 
-// typeFromString converts a string to a GitObjectType.
+// TypeFromString converts a string to a GitObjectType.
 // If the string is not a valid object type, an error is returned.
-func typeFromString(str string) (GitObjectType, error) {
+func TypeFromString(str string) (GitObjectType, error) {
 	switch str {
 	case "blob":
 		return BlobType, nil
@@ -57,6 +57,7 @@ type GitObject interface {
 	Serialize() ([]byte, error)
 	Deserialize(data []byte) error
 	Format() GitObjectType
+	SetData(data []byte)
 }
 
 // ObjectManager provides methods for reading and writing Git objects.
@@ -74,11 +75,12 @@ func NewObjectManager(repo *GitRepository) *ObjectManager {
 //
 // Parameters:
 // - obj: The GitObject to be written.
+// - changeRepo:
 //
 // Returns:
 // - string: The SHA-1 hash of the written object.
 // - error: An error if the operation fails.
-func (om *ObjectManager) WriteObject(obj GitObject) (string, error) {
+func (om *ObjectManager) WriteObject(obj GitObject, changeRepo bool) (string, error) {
 	data, err := obj.Serialize()
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize object: %w", err)
@@ -86,10 +88,13 @@ func (om *ObjectManager) WriteObject(obj GitObject) (string, error) {
 
 	content := om.prepareObject(obj.Format(), data)
 	sha := om.calculateSHA(content)
-	path := getGitFilePath(om.repo, true, ObjectDir, sha[:2], sha[2:])
 
-	if err := om.writeFile(path, content); err != nil {
-		return "", fmt.Errorf("failed to write object: %w", err)
+	if changeRepo {
+		path := getGitFilePath(om.repo, true, ObjectDir, sha[:2], sha[2:])
+
+		if err := om.writeFile(path, content); err != nil {
+			return "", fmt.Errorf("failed to write object: %w", err)
+		}
 	}
 	return sha, nil
 }
@@ -126,6 +131,36 @@ func (om *ObjectManager) ReadObject(sha string) (GitObject, error) {
 	}
 
 	return object, nil
+}
+
+// HashObject reads a file, creates a Git object of the specified type, and optionally writes it to the repository.
+// It returns the SHA-1 hash of the object or an error if the operation fails.
+//
+// Parameters:
+// - filePath: The path to the file to be read.
+// - ot: The type of the Git object to be created (e.g., BlobType, CommitType).
+// - write: A boolean indicating whether to write the object to the repository.
+//
+// Returns:
+// - string: The SHA-1 hash of the created object.
+// - error: An error if the operation fails.
+func (om *ObjectManager) HashObject(filePath string, ot GitObjectType, write bool) (string, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	var obj GitObject
+
+	switch ot {
+	case BlobType:
+		obj = Blob()
+	default:
+		return "", fmt.Errorf("unsupported object type: %s", ot)
+	}
+
+	obj.SetData(data)
+	return om.WriteObject(obj, write)
 }
 
 // prepareObject constructs the serialized Git object by adding the object type and size header.
@@ -227,7 +262,7 @@ func (om *ObjectManager) parseObject(content []byte) (GitObjectType, []byte, err
 		return ot, nil, fmt.Errorf("invalid object header")
 	}
 
-	ot, err := typeFromString(string(parts[0]))
+	ot, err := TypeFromString(string(parts[0]))
 
 	if err != nil {
 		return ot, nil, fmt.Errorf("invalid object type: %w", err)

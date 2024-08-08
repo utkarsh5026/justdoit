@@ -23,3 +23,7 @@ func (b *BlobObject) Deserialize(data []byte) error {
 func (b *BlobObject) Format() GitObjectType {
 	return b.format
 }
+
+func (b *BlobObject) SetData(data []byte) {
+	b.data = data
+}
