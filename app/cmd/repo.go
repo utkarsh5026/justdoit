@@ -12,6 +12,7 @@ const (
 	HeadFile     = "HEAD"
 	DescFile     = "description"
 	ConfigFile   = "config"
+	ObjectDir    = "objects"
 )
 
 type GitRepository struct {
@@ -108,7 +109,7 @@ func CreateGitRepository(path string) (*GitRepository, error) {
 	}
 
 	config := repoDefaultConfig()
-	config.SetConfigFile(repoFile(repo, false, ConfigFile))
+	config.SetConfigFile(getGitFilePath(repo, false, ConfigFile))
 
 	if err := config.WriteConfig(); err != nil {
 		return nil, err
@@ -150,19 +151,19 @@ func ensureValidRepoExists(repo *GitRepository) error {
 // Returns:
 // - An error if any of the directory creation operations fail.
 func createInitialDirectories(repo *GitRepository) error {
-	if _, err := repoDir(repo, true, "branches"); err != nil {
+	if _, err := ensureGitDirExists(repo, true, "branches"); err != nil {
 		return err
 	}
 
-	if _, err := repoDir(repo, true, "objects"); err != nil {
+	if _, err := ensureGitDirExists(repo, true, "objects"); err != nil {
 		return err
 	}
 
-	if _, err := repoDir(repo, true, "refs", "tags"); err != nil {
+	if _, err := ensureGitDirExists(repo, true, "refs", "tags"); err != nil {
 		return err
 	}
 
-	if _, err := repoDir(repo, true, "refs", "heads"); err != nil {
+	if _, err := ensureGitDirExists(repo, true, "refs", "heads"); err != nil {
 		return err
 	}
 
@@ -178,14 +179,14 @@ func createInitialDirectories(repo *GitRepository) error {
 // - An error if any of the file creation operations fail.
 func createGitFiles(repo *GitRepository) error {
 	// .git/description
-	descriptionPath := repoFile(repo, false, DescFile)
+	descriptionPath := getGitFilePath(repo, false, DescFile)
 	descriptionContent := "Unnamed repository; edit this file 'description' to name the repository.\n"
 	if err := os.WriteFile(descriptionPath, []byte(descriptionContent), 0644); err != nil {
 		return err
 	}
 
 	// .git/HEAD
-	headPath := repoFile(repo, false, HeadFile)
+	headPath := getGitFilePath(repo, false, HeadFile)
 	headContent := "ref: refs/heads/master\n"
 	if err := os.WriteFile(headPath, []byte(headContent), 0644); err != nil {
 		return err
