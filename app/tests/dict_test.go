@@ -1,4 +1,4 @@
-package ordereddict_test
+package test
 
 import (
 	"github.com/utkarsh5026/justdoit/app/ordereddict"

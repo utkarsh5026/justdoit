@@ -109,6 +109,10 @@ func (om *ObjectManager) WriteObject(obj GitObject, changeRepo bool) (string, er
 // - GitObject: The deserialized GitObject.
 // - error: An error if the operation fails.
 func (om *ObjectManager) ReadObject(sha string) (GitObject, error) {
+	if om.repo == nil {
+		return nil, fmt.Errorf("no repository provided")
+	}
+
 	objectPath := getGitFilePath(om.repo, false, ObjectDir, sha[:2], sha[2:])
 	content, err := om.readFile(objectPath)
 
@@ -155,6 +159,8 @@ func (om *ObjectManager) HashObject(filePath string, ot GitObjectType, write boo
 	switch ot {
 	case BlobType:
 		obj = Blob()
+	case CommitType:
+		obj = Commit()
 	default:
 		return "", fmt.Errorf("unsupported object type: %s", ot)
 	}
@@ -286,6 +292,8 @@ func (om *ObjectManager) createObject(ot GitObjectType) (GitObject, error) {
 	case BlobType:
 		return Blob(), nil
 
+	case CommitType:
+		return Commit(), nil
 	default:
 		return nil, fmt.Errorf("unsupported object type: %s", ot)
 	}
