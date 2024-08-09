@@ -84,7 +84,7 @@ func (c *CommitObject) Serialize() ([]byte, error) {
 
 func (c *CommitObject) Deserialize(data []byte) error {
 	c.kvlm = KvlmParse(data, 0, c.kvlm)
-	commit, err := createCommitFromKVLM(c.kvlm)
+	commit, err := CreateCommitFromKVLM(c.kvlm)
 
 	if err != nil {
 		return err
@@ -101,7 +101,7 @@ func (c *CommitObject) SetData(data []byte) {
 	c.kvlm = KvlmParse(data, 0, nil)
 }
 
-// parseSignature parses a Git signature from a byte slice.
+// ParseSignature parses a Git signature from a byte slice.
 //
 // A Git signature consists of a name, an email, and a timestamp. This function splits the input byte slice
 // into these components and returns a GitSignature struct.
@@ -112,34 +112,35 @@ func (c *CommitObject) SetData(data []byte) {
 // Returns:
 // - A GitSignature struct containing the parsed name, email, and timestamp.
 // - An error if the signature is invalid or if the timestamp cannot be parsed.
-func parseSignature(sign []byte) (GitSignature, error) {
-	var gitSign GitSignature
+func ParseSignature(sign []byte) (GitSignature, error) {
 
+	var gitSign GitSignature
 	parts := bytes.Split(sign, []byte{Space})
-	if len(parts) < 3 {
+	if len(parts) < 4 {
 		return gitSign, InvalidSignature(string(sign))
 	}
 
-	cnt := len(parts)
-	name := string(bytes.Join(parts[:cnt-2], []byte{Space})) // Join the parts except the last two
-	email := string(parts[cnt-2])
-	email = email[1 : len(email)-1] // Remove the angle brackets
-
-	timestamp, err := strconv.ParseInt(string(parts[cnt-1]), 10, 64)
-
-	if err != nil {
-		return gitSign, err
+	nameAndEmail := bytes.SplitN(bytes.Join(parts[:len(parts)-2], []byte{' '}), []byte{'<'}, 2)
+	if len(nameAndEmail) != 2 {
+		return gitSign, fmt.Errorf("invalid name and email format")
 	}
 
-	gitSign = GitSignature{
+	name := string(bytes.TrimSpace(nameAndEmail[0]))
+	email := string(bytes.TrimSuffix(nameAndEmail[1], []byte{'>'}))
+
+	timestamp, err := strconv.ParseInt(string(parts[len(parts)-2]), 10, 64)
+	if err != nil {
+		return gitSign, fmt.Errorf("invalid timestamp: %v", err)
+	}
+
+	return GitSignature{
 		Name:  name,
 		Email: email,
 		When:  time.Unix(timestamp, 0),
-	}
-	return gitSign, nil
+	}, nil
 }
 
-// createCommitFromKVLM creates a GitCommit object from a key-value list of metadata.
+// CreateCommitFromKVLM creates a GitCommit object from a key-value list of metadata.
 //
 // This function extracts the necessary fields from the provided OrderedDict and constructs a GitCommit object.
 // It handles the tree, parents, author, committer, and message fields.
@@ -150,7 +151,7 @@ func parseSignature(sign []byte) (GitSignature, error) {
 // Returns:
 // - A pointer to a GitCommit struct containing the parsed commit metadata.
 // - An error if any required key is missing or if there is an error during parsing.
-func createCommitFromKVLM(kvlm *ordereddict.OrderedDict) (*GitCommit, error) {
+func CreateCommitFromKVLM(kvlm *ordereddict.OrderedDict) (*GitCommit, error) {
 	commit := GitCommit{}
 	tree, exists := kvlm.Get("tree")
 	if !exists {
@@ -175,7 +176,7 @@ func createCommitFromKVLM(kvlm *ordereddict.OrderedDict) (*GitCommit, error) {
 	if !exists {
 		return nil, CommitKeyMissing("author")
 	}
-	authorSign, err := parseSignature(author.([]byte))
+	authorSign, err := ParseSignature(author.([]byte))
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +186,7 @@ func createCommitFromKVLM(kvlm *ordereddict.OrderedDict) (*GitCommit, error) {
 	if !exists {
 		return nil, CommitKeyMissing("committer")
 	}
-	committerSign, err := parseSignature(committer.([]byte))
+	committerSign, err := ParseSignature(committer.([]byte))
 	if err != nil {
 		return nil, err
 	}
