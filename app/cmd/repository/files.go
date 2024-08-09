@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"github.com/utkarsh5026/justdoit/app/cmd/fileutils"
 	"os"
 	"path/filepath"
 )
@@ -38,7 +39,7 @@ func EnsureGitDirExists(repo *GitRepository, mkdir bool, paths ...string) (strin
 	}
 
 	if pathExists {
-		isDir, err := isDir(path)
+		isDir, err := fileutils.IsDir(path)
 		if err != nil || !isDir {
 			return "", err
 		} else {
@@ -90,7 +91,7 @@ func LocateGitRepository(startPath string, required bool) (*GitRepository, error
 	}
 
 	gitPath := filepath.Join(absPath, GitExtension)
-	if pathExists(gitPath) {
+	if fileutils.PathExists(gitPath) {
 		return initializeGitRepo(absPath, false)
 	}
 
