@@ -30,6 +30,14 @@ func (tr *GitTreeLeaf) String() string {
 	return builder.String()
 }
 
+// Type determines the Git object type of the tree leaf based on its mode.
+//
+// The function extracts the type string from the mode and maps it to a GitObjectType.
+// It returns an error if the mode does not correspond to a valid object type.
+//
+// Returns:
+// - GitObjectType: The type of the Git object (e.g., BlobType, TreeType, CommitType).
+// - error: An error if the mode does not correspond to a valid object type.
 func (tr *GitTreeLeaf) Type() (GitObjectType, error) {
 	var typeStr string
 	if len(tr.mode) == 5 {
@@ -53,14 +61,17 @@ func (tr *GitTreeLeaf) Type() (GitObjectType, error) {
 	}
 }
 
+// Sha returns the SHA-1 hash of the tree leaf.
 func (tr *GitTreeLeaf) Sha() string {
 	return tr.sha
 }
 
+// Name returns the name of the tree leaf.
 func (tr *GitTreeLeaf) Name() string {
 	return tr.path
 }
 
+// Mode returns the mode of the tree leaf.
 func (tr *GitTreeLeaf) Mode() string {
 	return tr.mode
 }
