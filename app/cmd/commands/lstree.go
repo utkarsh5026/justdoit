@@ -48,7 +48,7 @@ func lsTree(repo *repository.GitRepository, recursive bool, treeSha string, pref
 
 	repo, err := repository.LocateCurrentRepository()
 	if err != nil {
-		return fmt.Errorf("unable to locate repository: %w", err)
+		return RepoNotFound(err)
 	}
 
 	oman := objects.NewObjectManager(repo)
@@ -56,19 +56,19 @@ func lsTree(repo *repository.GitRepository, recursive bool, treeSha string, pref
 
 	obj, err := oman.ReadObject(sha)
 	if err != nil {
-		return fmt.Errorf("failed to read tree object: %w", err)
+		return ObjectReadError(err)
 	}
 
 	tree, ok := obj.(*objects.GitTree)
 	if !ok {
-		return fmt.Errorf("invalid tree object")
+		return InvalidTreeObject(fmt.Errorf("invalid tree object: %s", sha))
 	}
 
 	entries := tree.Entries()
 	for _, entry := range entries {
 		entryType, err := entry.Type()
 		if err != nil {
-			return fmt.Errorf("failed to get object type: %w", err)
+			return ObjectTypeError(err)
 		}
 
 		if !(recursive && entryType == objects.TreeType) {
