@@ -7,6 +7,25 @@ import (
 	"path/filepath"
 )
 
+// LsTree lists the contents of a Git tree object in the current repository.
+//
+// This function is a high-level wrapper that locates the current repository
+// and calls the lsTree function to list the contents of the specified tree object.
+// It supports recursive listing of tree objects.
+//
+// The `git ls-tree` command is used to list the contents of a tree object in a Git repository.
+// It provides information about the files and directories (tree objects) that are stored in a specific tree object,
+// including their modes, types, and SHA-1 hashes. This command is useful for inspecting the structure of a repository
+// at a specific commit or tree object.
+//
+// eg : git ls-tree -r HEAD, git ls-tree -r e89f3a
+//
+// Parameters:
+// - recursive: A boolean indicating whether to list contents recursively.
+// - treeSha: A string representing the SHA-1 hash of the tree object to list.
+//
+// Returns:
+// - An error if any operation fails, otherwise nil.
 func LsTree(recursive bool, treeSha string) error {
 	repo, err := repository.LocateCurrentRepository()
 	if err != nil {
