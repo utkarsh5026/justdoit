@@ -85,3 +85,87 @@ This functionality is crucial for several Git operations:
 
 By implementing these functions, you're recreating a core part of how Git manages and interprets the structure of a
 repository.
+
+# Example: Git Reference Functions in Action
+
+Let's imagine we have a Git repository with the following structure in its `.git/refs` directory:
+
+```
+.git/refs/
+├── heads/
+│   ├── main
+│   └── feature
+├── tags/
+│   └── v1.0
+└── remotes/
+    └── origin/
+        ├── main
+        └── feature
+```
+
+And let's say the contents of these files are:
+
+- `.git/refs/heads/main`: `abc123...` (a commit hash)
+- `.git/refs/heads/feature`: `def456...` (a commit hash)
+- `.git/refs/tags/v1.0`: `ghi789...` (a commit hash)
+- `.git/refs/remotes/origin/main`: `jkl012...` (a commit hash)
+- `.git/refs/remotes/origin/feature`: `ref: refs/remotes/origin/main` (a symbolic ref)
+
+Now, let's walk through how our `ListRefs` and `resolveRef` functions would process this:
+
+1. We start by calling `ListRefs(repo, "")`.
+
+2. Since the path is empty, it defaults to the "refs" directory.
+
+3. `ListRefs` finds three items: "heads", "tags", and "remotes". It processes each:
+
+   a) For "heads":
+    - It's a directory, so `ListRefs` is called recursively.
+    - It finds two files: "main" and "feature".
+    - For each, it calls `resolveRef`:
+        - For "main": `resolveRef` reads the file and returns `"abc123..."`
+        - For "feature": `resolveRef` reads the file and returns `"def456..."`
+
+   b) For "tags":
+    - It's a directory, so `ListRefs` is called recursively.
+    - It finds one file: "v1.0".
+    - It calls `resolveRef`, which reads the file and returns `"ghi789..."`
+
+   c) For "remotes":
+    - It's a directory, so `ListRefs` is called recursively.
+    - It finds one directory: "origin".
+    - For "origin", `ListRefs` is called again:
+        - It finds two files: "main" and "feature".
+        - For "main", `resolveRef` reads the file and returns `"jkl012..."`
+        - For "feature", `resolveRef` reads `"ref: refs/remotes/origin/main"`:
+            - It recognizes this as a symbolic ref.
+            - It calls itself again with `"refs/remotes/origin/main"`.
+            - This resolves to `"jkl012..."`.
+
+4. `ListRefs` combines all these results into a nested `OrderedDict`.
+
+The final result would look something like this:
+
+```go
+OrderedDict{
+"heads": OrderedDict{
+"main": "abc123...",
+"feature": "def456...",
+},
+"tags": OrderedDict{
+"v1.0": "ghi789...",
+},
+"remotes": OrderedDict{
+"origin": OrderedDict{
+"main": "jkl012...",
+"feature": "jkl012...",
+},
+},
+}
+```
+
+Note how the symbolic ref `refs/remotes/origin/feature` has been resolved to the same commit hash
+as `refs/remotes/origin/main`.
+
+This structure gives us a complete picture of all the refs in our repository, with each one resolved to the actual
+commit it points to, even through symbolic refs.
