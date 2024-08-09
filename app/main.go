@@ -126,8 +126,7 @@ func checkoutCommand() *cobra.Command {
 		Use:   "checkout",
 		Short: "Checkout a commit inside of a directory.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Add your logic here to handle the checkout command
-			return nil
+			return commands.Checkout(commit, path)
 		},
 	}
 
@@ -138,6 +137,18 @@ func checkoutCommand() *cobra.Command {
 	_ = checkoutCmd.MarkFlagRequired("path")
 
 	return checkoutCmd
+}
+
+func showRefCommand() *cobra.Command {
+	showRefCmd := &cobra.Command{
+		Use:   "show-ref",
+		Short: "List references in a local repository.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return commands.ShowRef()
+		},
+	}
+
+	return showRefCmd
 }
 
 func main() {
@@ -152,7 +163,8 @@ func main() {
 	logCmd := logCommand()
 	lsTreeCmd := lsTreeCommand()
 	checkoutCmd := checkoutCommand()
-	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd, logCmd, lsTreeCmd, checkoutCmd)
+	showRefCmd := showRefCommand()
+	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd, logCmd, lsTreeCmd, checkoutCmd, showRefCmd)
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}
