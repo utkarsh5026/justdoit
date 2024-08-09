@@ -165,6 +165,8 @@ func (om *ObjectManager) HashObject(filePath string, ot GitObjectType, write boo
 		obj = Commit()
 	case TreeType:
 		obj = Tree()
+	case TagType:
+		obj = Tag()
 	default:
 		return "", fmt.Errorf("unsupported object type: %s", ot)
 	}
@@ -298,6 +300,12 @@ func (om *ObjectManager) createObject(ot GitObjectType) (GitObject, error) {
 
 	case CommitType:
 		return Commit(), nil
+
+	case TreeType:
+		return Tree(), nil
+
+	case TagType:
+		return Tag(), nil
 	default:
 		return nil, fmt.Errorf("unsupported object type: %s", ot)
 	}
