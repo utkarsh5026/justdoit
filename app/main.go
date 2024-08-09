@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/utkarsh5026/justdoit/app/cmd/commands"
-	"github.com/utkarsh5026/justdoit/app/cmd/objects"
 	"github.com/utkarsh5026/justdoit/app/cmd/repository"
 )
 
@@ -64,29 +63,7 @@ func hashObjectCommand() *cobra.Command {
 		Use:   "hash-object",
 		Short: "Compute object ID and optionally creates a blob from a file",
 		RunE: func(command *cobra.Command, args []string) error {
-			var repo *repository.GitRepository
-			var err error
-			if write {
-				repo, err = repository.LocateGitRepository(".", true)
-				if err != nil {
-					return fmt.Errorf("unable to locate repository: %w", err)
-				}
-			}
-
-			om := objects.NewObjectManager(repo)
-			obType, err := objects.TypeFromString(objectType)
-
-			if err != nil {
-				return fmt.Errorf("invalid object type: %w", err)
-			}
-
-			hash, err := om.HashObject(filePath, obType, write)
-			if err != nil {
-				return fmt.Errorf("failed to hash object: %w", err)
-			}
-
-			fmt.Println(hash)
-			return nil
+			return commands.HashObject(filePath, objectType, write)
 		},
 	}
 
