@@ -36,25 +36,13 @@ func catFileCommand() *cobra.Command {
 	catFileCmd := &cobra.Command{
 		Use:   "cat-file",
 		Short: "Provide content of repository objects",
+		Long: "The 'cat-file' command provides content of repository objects. " +
+			"It can be used to display the content of a blob, commit, tag, or tree object.",
 		RunE: func(command *cobra.Command, args []string) error {
-			repo, err := repository.LocateGitRepository(".", true)
-			if err != nil {
-				return fmt.Errorf("unable to locate repository: %w", err)
+			options := commands.CatFileOptions{
+				Type: objectType != "",
 			}
-
-			om := objects.NewObjectManager(repo)
-			obj, err := om.ReadObject(object)
-			if err != nil {
-				return fmt.Errorf("failed to read object: %w", err)
-			}
-
-			data, err := obj.Serialize()
-			if err != nil {
-				return fmt.Errorf("failed to serialize object: %w", err)
-			}
-
-			fmt.Println(string(data))
-			return nil
+			return commands.CatFile(objectType, options)
 		},
 	}
 
@@ -153,6 +141,28 @@ func lsTreeCommand() *cobra.Command {
 	lsTreeCmd.Flags().StringVarP(&treeSha, "tree", "t", "HEAD", "The tree to list")
 	return lsTreeCmd
 }
+
+func checkoutCommand() *cobra.Command {
+	var commit string
+	var path string
+	checkoutCmd := &cobra.Command{
+		Use:   "checkout",
+		Short: "Checkout a commit inside of a directory.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Add your logic here to handle the checkout command
+			return nil
+		},
+	}
+
+	checkoutCmd.Flags().StringVarP(&commit, "commit", "c", "", "The commit or tree to checkout.")
+	_ = checkoutCmd.MarkFlagRequired("commit")
+
+	checkoutCmd.Flags().StringVarP(&path, "path", "p", "", "The EMPTY directory to checkout on.")
+	_ = checkoutCmd.MarkFlagRequired("path")
+
+	return checkoutCmd
+}
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "justdoit",
@@ -164,7 +174,8 @@ func main() {
 	hashObjCmd := hashObjectCommand()
 	logCmd := logCommand()
 	lsTreeCmd := lsTreeCommand()
-	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd, logCmd, lsTreeCmd)
+	checkoutCmd := checkoutCommand()
+	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd, logCmd, lsTreeCmd, checkoutCmd)
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}
