@@ -12,14 +12,29 @@ const (
 	ShaSize = 20 // The size of SHA-1 hash in Git tree.
 )
 
-type GitTree struct {
-	entries []*GitTreeLeaf
-}
-
+// GitTreeLeaf represents a single entry in a Git tree object.
+//
+// A Git tree object is a fundamental component of Git's object model, representing the structure of a directory in a Git repository.
+// Each entry in a tree object can be a file (blob), another directory (tree), a symbolic link, or a submodule.
+//
+// Fields:
+// - mode: A string representing the file mode and type. Here The first two or three digits represent the type of the object and the last three digits represent the Unix file permissions. Common modes include:
+//   - "100644": Regular file with read/write permissions for the owner, and read-only permissions for others.
+//   - "100755": Executable file with read/write/execute permissions for the owner, and read/execute permissions for others.
+//   - "040000": Directory (tree).
+//   - "120000": Symbolic link.
+//   - "160000": Gitlink (submodule).
+//
+// - sha: A string representing the 20-byte SHA-1 hash of the object this entry points to. This hash uniquely identifies the object in the Git repository.
+// - path: A string representing the file or directory name relative to the root of the repository.
 type GitTreeLeaf struct {
 	mode string
 	sha  string
 	path string
+}
+
+type GitTree struct {
+	entries []*GitTreeLeaf
 }
 
 func (tr *GitTreeLeaf) String() string {
