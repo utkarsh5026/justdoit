@@ -9,6 +9,19 @@ import (
 	"strings"
 )
 
+// ListRefs lists the references in the given path and returns them in an OrderedDict.
+//
+// This function recursively traverses the directory structure starting from the given path,
+// and collects references (both directories and files) into an OrderedDict. If the path is empty,
+// it ensures the Git directory exists and starts from the "refs" directory.
+//
+// Parameters:
+// - repo: The Git repository object.
+// - path: The path to the directory containing references.
+//
+// Returns:
+// - A pointer to an OrderedDict containing the references.
+// - An error if any operation fails.
 func ListRefs(repo *GitRepository, path string) (*ordereddict.OrderedDict, error) {
 	var err error
 	if path == "" {
