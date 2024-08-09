@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"github.com/utkarsh5026/justdoit/app/cmd/fileutils"
 	"github.com/utkarsh5026/justdoit/app/cmd/repository"
 	"io"
 	"os"
@@ -225,7 +226,7 @@ func (om *ObjectManager) readFile(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	defer repository.CloseFile(file)
+	defer fileutils.CloseFile(file)
 
 	var buff bytes.Buffer
 	reader, err := zlib.NewReader(file)

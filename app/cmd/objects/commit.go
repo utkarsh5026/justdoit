@@ -72,6 +72,10 @@ type CommitObject struct {
 	commit *GitCommit
 }
 
+func (c *CommitObject) GetCommit() *GitCommit {
+	return c.commit
+}
+
 func Commit() *CommitObject {
 	return &CommitObject{
 		kvlm: ordereddict.New(),

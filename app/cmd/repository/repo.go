@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"github.com/utkarsh5026/justdoit/app/cmd/fileutils"
 	"os"
 	"path/filepath"
 )
@@ -38,7 +39,7 @@ func initializeGitRepo(path string, force bool) (*GitRepository, error) {
 	}
 
 	if !force {
-		isDir, err := isDir(repo.GitDir)
+		isDir, err := fileutils.IsDir(repo.GitDir)
 		if err != nil {
 			return nil, err
 		}
@@ -125,13 +126,13 @@ func CreateGitRepository(path string) (*GitRepository, error) {
 // Returns:
 // - An error if the repository is not valid or if any of the directory operations fail.
 func ensureValidRepoExists(repo *GitRepository) error {
-	if pathExists(repo.GitDir) {
-		isDir, err := isDir(repo.WorkTree)
+	if fileutils.PathExists(repo.GitDir) {
+		isDir, err := fileutils.IsDir(repo.WorkTree)
 		if err != nil || !isDir {
 			return fmt.Errorf("'%s' is not a directory", repo.WorkTree)
 		}
 
-		dirs, err := listDir(repo.GitDir)
+		dirs, err := fileutils.ListDir(repo.GitDir)
 		if err != nil || len(dirs) > 0 {
 			return fmt.Errorf("'%s' is not an empty directory", repo.GitDir)
 		}

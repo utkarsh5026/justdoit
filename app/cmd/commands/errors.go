@@ -1,9 +1,16 @@
 package commands
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/utkarsh5026/justdoit/app/cmd/objects"
+)
 
 var RepoNotFound = func(err error) error {
 	return fmt.Errorf("unable to locate repository: %w", err)
+}
+
+var ObjectMismatchError = func(expected, actual objects.GitObjectType) error {
+	return fmt.Errorf("object type mismatch: expected %s, got %s", expected, actual)
 }
 
 var InvalidTreeObject = func(err error) error {
