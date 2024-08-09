@@ -2,7 +2,7 @@ package test
 
 import (
 	"bytes"
-	"github.com/utkarsh5026/justdoit/app/cmd"
+	"github.com/utkarsh5026/justdoit/app/cmd/objects"
 	"github.com/utkarsh5026/justdoit/app/ordereddict"
 	"reflect"
 	"testing"
@@ -93,7 +93,7 @@ func TestKvlmSerialize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := cmd.KvlmSerialize(tt.input)
+			got, err := objects.KvlmSerialize(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("kvlmSerialize() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -199,7 +199,7 @@ func TestKvlmParse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := cmd.KvlmParse(tt.input, 0, nil)
+			result := objects.KvlmParse(tt.input, 0, nil)
 			if !reflect.DeepEqual(result, tt.expected) {
 				t.Errorf("KvlmParse() = %v, want %v", result, tt.expected)
 			}
@@ -247,7 +247,7 @@ func TestKvlmParse_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := cmd.KvlmParse(tt.input, tt.start, nil)
+			result := objects.KvlmParse(tt.input, tt.start, nil)
 			if !reflect.DeepEqual(result, tt.expected) {
 				t.Errorf("KvlmParse() = %v, want %v", result, tt.expected)
 			}

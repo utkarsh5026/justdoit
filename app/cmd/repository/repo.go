@@ -1,4 +1,4 @@
-package cmd
+package repository
 
 import (
 	"fmt"
@@ -61,7 +61,7 @@ func initializeGitRepo(path string, force bool) (*GitRepository, error) {
 // readConfig reads the configuration for the Git repository.
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths and configuration.
+// - repository: A pointer to a GitRepository struct containing the repository paths and configuration.
 // - force: A boolean indicating whether to force the reading of the configuration.
 //
 // Returns:
@@ -109,7 +109,7 @@ func CreateGitRepository(path string) (*GitRepository, error) {
 	}
 
 	config := repoDefaultConfig()
-	config.SetConfigFile(getGitFilePath(repo, false, ConfigFile))
+	config.SetConfigFile(GetGitFilePath(repo, false, ConfigFile))
 
 	if err := config.WriteConfig(); err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func CreateGitRepository(path string) (*GitRepository, error) {
 // ensureValidRepoExists checks if the Git repository exists and is valid.
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths.
+// - repository: A pointer to a GitRepository struct containing the repository paths.
 //
 // Returns:
 // - An error if the repository is not valid or if any of the directory operations fail.
@@ -146,24 +146,24 @@ func ensureValidRepoExists(repo *GitRepository) error {
 // createInitialDirectories creates the initial directory structure, like branches, objects, refs/tags, refs/heads
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths.
+// - repository: A pointer to a GitRepository struct containing the repository paths.
 //
 // Returns:
 // - An error if any of the directory creation operations fail.
 func createInitialDirectories(repo *GitRepository) error {
-	if _, err := ensureGitDirExists(repo, true, "branches"); err != nil {
+	if _, err := EnsureGitDirExists(repo, true, "branches"); err != nil {
 		return err
 	}
 
-	if _, err := ensureGitDirExists(repo, true, "objects"); err != nil {
+	if _, err := EnsureGitDirExists(repo, true, "objects"); err != nil {
 		return err
 	}
 
-	if _, err := ensureGitDirExists(repo, true, "refs", "tags"); err != nil {
+	if _, err := EnsureGitDirExists(repo, true, "refs", "tags"); err != nil {
 		return err
 	}
 
-	if _, err := ensureGitDirExists(repo, true, "refs", "heads"); err != nil {
+	if _, err := EnsureGitDirExists(repo, true, "refs", "heads"); err != nil {
 		return err
 	}
 
@@ -173,20 +173,20 @@ func createInitialDirectories(repo *GitRepository) error {
 // createGitFiles creates the initial files for a Git repository.
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths.
+// - repository: A pointer to a GitRepository struct containing the repository paths.
 //
 // Returns:
 // - An error if any of the file creation operations fail.
 func createGitFiles(repo *GitRepository) error {
 	// .git/description
-	descriptionPath := getGitFilePath(repo, false, DescFile)
+	descriptionPath := GetGitFilePath(repo, false, DescFile)
 	descriptionContent := "Unnamed repository; edit this file 'description' to name the repository.\n"
 	if err := os.WriteFile(descriptionPath, []byte(descriptionContent), 0644); err != nil {
 		return err
 	}
 
 	// .git/HEAD
-	headPath := getGitFilePath(repo, false, HeadFile)
+	headPath := GetGitFilePath(repo, false, HeadFile)
 	headContent := "ref: refs/heads/master\n"
 	if err := os.WriteFile(headPath, []byte(headContent), 0644); err != nil {
 		return err

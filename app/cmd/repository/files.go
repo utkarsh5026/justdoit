@@ -1,4 +1,4 @@
-package cmd
+package repository
 
 import (
 	"fmt"
@@ -6,31 +6,31 @@ import (
 	"path/filepath"
 )
 
-// createRepoPath constructs a file path by joining the repository path with additional paths.
+// CreateRepoPath constructs a file path by joining the repository path with additional paths.
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths.
+// - repository: A pointer to a GitRepository struct containing the repository paths.
 // - paths: A variadic parameter representing additional path segments to be joined.
 //
 // Returns:
 // - A string representing the combined file path.
-func createRepoPath(repo *GitRepository, paths ...string) string {
+func CreateRepoPath(repo *GitRepository, paths ...string) string {
 	paths = append([]string{repo.GitDir}, paths...)
 	return filepath.Join(paths...)
 }
 
-// ensureGitDirExists constructs a directory path within a repository and optionally creates the directory.
+// EnsureGitDirExists constructs a directory path within a repository and optionally creates the directory.
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths.
+// - repository: A pointer to a GitRepository struct containing the repository paths.
 // - mkdir: A boolean indicating whether to create the directory if it does not exist.
 // - paths: A variadic parameter representing additional path segments to be joined.
 //
 // Returns:
 // - A string representing the combined directory path. If an error occurs, an empty string is returned.
 // - An error if there is an issue checking the directory status or creating the directory
-func ensureGitDirExists(repo *GitRepository, mkdir bool, paths ...string) (string, error) {
-	path := createRepoPath(repo, paths...)
+func EnsureGitDirExists(repo *GitRepository, mkdir bool, paths ...string) (string, error) {
+	path := CreateRepoPath(repo, paths...)
 	pathExists := true
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -56,22 +56,22 @@ func ensureGitDirExists(repo *GitRepository, mkdir bool, paths ...string) (strin
 	return "", nil
 }
 
-// getGitFilePath constructs a file path within a repository and optionally creates the necessary directories.
+// GetGitFilePath constructs a file path within a repository and optionally creates the necessary directories.
 //
 // Parameters:
-// - repo: A pointer to a GitRepository struct containing the repository paths.
+// - repository: A pointer to a GitRepository struct containing the repository paths.
 // - mkdir: A boolean indicating whether to create the directory if it does not exist.
 // - paths: A variadic parameter representing additional path segments to be joined.
 //
 // Returns:
 // - A string representing the combined file path. If an error occurs, an empty string is returned
-func getGitFilePath(repo *GitRepository, mkdir bool, paths ...string) string {
+func GetGitFilePath(repo *GitRepository, mkdir bool, paths ...string) string {
 	dirPath := paths[:len(paths)-1]
-	_, err := ensureGitDirExists(repo, mkdir, dirPath...)
+	_, err := EnsureGitDirExists(repo, mkdir, dirPath...)
 	if err != nil {
 		return ""
 	}
-	return createRepoPath(repo, paths...)
+	return CreateRepoPath(repo, paths...)
 }
 
 // LocateGitRepository searches for a Git repository directory starting from a given path.
@@ -103,4 +103,8 @@ func LocateGitRepository(startPath string, required bool) (*GitRepository, error
 	}
 
 	return LocateGitRepository(parentPath, required)
+}
+
+func LocateCurrentRepository() (*GitRepository, error) {
+	return LocateGitRepository(".", true)
 }

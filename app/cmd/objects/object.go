@@ -1,4 +1,4 @@
-package cmd
+package objects
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"github.com/utkarsh5026/justdoit/app/cmd/repository"
 	"io"
 	"os"
 	"strconv"
@@ -62,11 +63,11 @@ type GitObject interface {
 
 // ObjectManager provides methods for reading and writing Git objects.
 type ObjectManager struct {
-	repo *GitRepository
+	repo *repository.GitRepository
 }
 
 // NewObjectManager creates a new ObjectManager with the given GitRepository.
-func NewObjectManager(repo *GitRepository) *ObjectManager {
+func NewObjectManager(repo *repository.GitRepository) *ObjectManager {
 	return &ObjectManager{repo: repo}
 }
 
@@ -90,7 +91,7 @@ func (om *ObjectManager) WriteObject(obj GitObject, changeRepo bool) (string, er
 	sha := om.calculateSHA(content)
 
 	if changeRepo {
-		path := getGitFilePath(om.repo, true, ObjectDir, sha[:2], sha[2:])
+		path := repository.GetGitFilePath(om.repo, true, repository.ObjectDir, sha[:2], sha[2:])
 
 		if err := om.writeFile(path, content); err != nil {
 			return "", fmt.Errorf("failed to write object: %w", err)
@@ -113,7 +114,7 @@ func (om *ObjectManager) ReadObject(sha string) (GitObject, error) {
 		return nil, fmt.Errorf("no repository provided")
 	}
 
-	objectPath := getGitFilePath(om.repo, false, ObjectDir, sha[:2], sha[2:])
+	objectPath := repository.GetGitFilePath(om.repo, false, repository.ObjectDir, sha[:2], sha[2:])
 	content, err := om.readFile(objectPath)
 
 	if err != nil {
@@ -161,6 +162,8 @@ func (om *ObjectManager) HashObject(filePath string, ot GitObjectType, write boo
 		obj = Blob()
 	case CommitType:
 		obj = Commit()
+	case TreeType:
+		obj = Tree()
 	default:
 		return "", fmt.Errorf("unsupported object type: %s", ot)
 	}
@@ -222,7 +225,7 @@ func (om *ObjectManager) readFile(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	defer closeFile(file)
+	defer repository.CloseFile(file)
 
 	var buff bytes.Buffer
 	reader, err := zlib.NewReader(file)

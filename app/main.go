@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/utkarsh5026/justdoit/app/cmd"
+	"github.com/utkarsh5026/justdoit/app/cmd/commands"
+	"github.com/utkarsh5026/justdoit/app/cmd/objects"
+	"github.com/utkarsh5026/justdoit/app/cmd/repository"
 )
 
 func initCommand() *cobra.Command {
@@ -13,7 +15,7 @@ func initCommand() *cobra.Command {
 		Short: "Create an empty Git repository or reinitialize an existing one",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
-			_, err := cmd.CreateGitRepository(repoPath)
+			_, err := repository.CreateGitRepository(repoPath)
 			if err != nil {
 				return err
 			}
@@ -35,12 +37,12 @@ func catFileCommand() *cobra.Command {
 		Use:   "cat-file",
 		Short: "Provide content of repository objects",
 		RunE: func(command *cobra.Command, args []string) error {
-			repo, err := cmd.LocateGitRepository(".", true)
+			repo, err := repository.LocateGitRepository(".", true)
 			if err != nil {
 				return fmt.Errorf("unable to locate repository: %w", err)
 			}
 
-			om := cmd.NewObjectManager(repo)
+			om := objects.NewObjectManager(repo)
 			obj, err := om.ReadObject(object)
 			if err != nil {
 				return fmt.Errorf("failed to read object: %w", err)
@@ -74,17 +76,17 @@ func hashObjectCommand() *cobra.Command {
 		Use:   "hash-object",
 		Short: "Compute object ID and optionally creates a blob from a file",
 		RunE: func(command *cobra.Command, args []string) error {
-			var repo *cmd.GitRepository
+			var repo *repository.GitRepository
 			var err error
 			if write {
-				repo, err = cmd.LocateGitRepository(".", true)
+				repo, err = repository.LocateGitRepository(".", true)
 				if err != nil {
 					return fmt.Errorf("unable to locate repository: %w", err)
 				}
 			}
 
-			om := cmd.NewObjectManager(repo)
-			obType, err := cmd.TypeFromString(objectType)
+			om := objects.NewObjectManager(repo)
+			obType, err := objects.TypeFromString(objectType)
 
 			if err != nil {
 				return fmt.Errorf("invalid object type: %w", err)
@@ -111,6 +113,46 @@ func hashObjectCommand() *cobra.Command {
 	return hashObjectCmd
 }
 
+func logCommand() *cobra.Command {
+	var commit string
+
+	logCmd := &cobra.Command{
+		Use:   "log",
+		Short: "Display history of a given commit.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				commit = args[0]
+			} else {
+				commit = "HEAD"
+			}
+			// Add your logic here to handle the log command
+			return nil
+		},
+	}
+
+	logCmd.Flags().StringVarP(&commit, "commit", "c", "HEAD", "Commit to start at")
+
+	return logCmd
+}
+
+func lsTreeCommand() *cobra.Command {
+
+	var recursive bool
+	var treeSha string
+
+	lsTreeCmd := &cobra.Command{
+		Use:   "ls-tree",
+		Short: "List the contents of a tree object",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return commands.LsTree(recursive, treeSha)
+		},
+	}
+
+	lsTreeCmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "Recurse into sub-trees")
+
+	lsTreeCmd.Flags().StringVarP(&treeSha, "tree", "t", "HEAD", "The tree to list")
+	return lsTreeCmd
+}
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "justdoit",
@@ -120,7 +162,9 @@ func main() {
 	initCmd := initCommand()
 	catFileCmd := catFileCommand()
 	hashObjCmd := hashObjectCommand()
-	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd)
+	logCmd := logCommand()
+	lsTreeCmd := lsTreeCommand()
+	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd, logCmd, lsTreeCmd)
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}

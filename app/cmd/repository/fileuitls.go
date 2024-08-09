@@ -1,4 +1,4 @@
-package cmd
+package repository
 
 import "os"
 
@@ -18,11 +18,13 @@ func isDir(path string) (bool, error) {
 	return fileInfo.IsDir(), nil
 }
 
+// pathExists checks if the given path exists.
 func pathExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }
 
+// isFile checks if the given path is a file.
 func isFile(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
@@ -31,7 +33,8 @@ func isFile(path string) (bool, error) {
 	return !fileInfo.IsDir(), nil
 }
 
-func closeFile(file *os.File) {
+// CloseFile  closes the file and panics if an error occurs.
+func CloseFile(file *os.File) {
 	err := file.Close()
 	if err != nil {
 		panic(err)
