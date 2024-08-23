@@ -151,6 +151,53 @@ func showRefCommand() *cobra.Command {
 	return showRefCmd
 }
 
+func tagCommand() *cobra.Command {
+	var createTagObject bool
+	var name string
+	var object string
+
+	tagCmd := &cobra.Command{
+		Use:   "tag",
+		Short: "List and create tags",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				name = args[0]
+			}
+			if len(args) > 1 {
+				object = args[1]
+			} else {
+				object = "HEAD"
+			}
+			// Add your logic here to handle the tag command
+			return nil
+		},
+	}
+
+	tagCmd.Flags().BoolVarP(&createTagObject, "create_tag_object", "a", false, "Whether to create a tag object")
+	tagCmd.Flags().StringVarP(&name, "name", "n", "", "The new tag's name")
+	tagCmd.Flags().StringVarP(&object, "object", "o", "HEAD", "The object the new tag will point to")
+
+	return tagCmd
+}
+
+func lsFilesCommand() *cobra.Command {
+	var verbose bool
+	lsFilesCmd := &cobra.Command{
+		Use:   "ls-files",
+		Short: "List files in the index",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			options := commands.LsFilesOptions{
+				Verbose: verbose,
+			}
+			return commands.LsFile(options)
+		},
+	}
+
+	lsFilesCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show additional information about each file")
+
+	return lsFilesCmd
+}
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "justdoit",
@@ -164,7 +211,17 @@ func main() {
 	lsTreeCmd := lsTreeCommand()
 	checkoutCmd := checkoutCommand()
 	showRefCmd := showRefCommand()
-	rootCmd.AddCommand(initCmd, catFileCmd, hashObjCmd, logCmd, lsTreeCmd, checkoutCmd, showRefCmd)
+	tagCmd := tagCommand()
+	lsFilesCmd := lsFilesCommand()
+	rootCmd.AddCommand(initCmd,
+		catFileCmd,
+		hashObjCmd,
+		logCmd,
+		lsTreeCmd,
+		checkoutCmd,
+		showRefCmd,
+		tagCmd,
+		lsFilesCmd)
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}
